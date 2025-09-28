@@ -60,6 +60,7 @@ async function askGemini(userId, channelId, prompt) {
 
       const answer = response.text;
 
+      await saveMessage(userId, channelId, answer);
       await saveMessage("gemini", channelId, answer);
 
       return answer;
