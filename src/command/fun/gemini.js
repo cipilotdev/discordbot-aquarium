@@ -11,11 +11,24 @@ module.exports = {
       );
     }
 
+    if (question.length > 1000) {
+      return message.reply(
+        "Pertanyaan lu kepanjangan bjir, maksimal 1000 karakter."
+      );
+    }
+
     const thinkingMsg = await message.reply("Lagi mikir sabar dikit... 🤔");
+
     try {
-      const reply = await askGemini(question);
+      // pass userId dan channelId ke askGemini
+      const reply = await askGemini(
+        message.author.id,
+        message.channel.id,
+        question
+      );
       await thinkingMsg.edit(reply);
     } catch (error) {
+      console.error("Discord command error:", error);
       await thinkingMsg.edit("Waduh error nih, coba lagi nanti ya!");
     }
   },
