@@ -3,31 +3,29 @@ const { EmbedBuilder } = require("discord.js");
 
 module.exports = {
   name: "fastfetch",
-  description: "Tampilin info sistem pake fastfetch (harus install dulu)",
+  description: "Tampilkan info sistem pake fastfetch (harus install dulu)",
   category: "Utility",
   async execute(message) {
-    exec("fastfetch", (err, stdout, stderr) => {
+    exec("fastfetch --stdout", (err, stdout, stderr) => {
       if (err) {
         message.reply(
-          `Gagal ngejalanin fastfetch. Pastikan fastfetch udah terinstall di server.\nError: ${err.message}`
+          `Gagal ngejalanin fastfetch. Pastikan fastfetch udah terinstall.\nError: ${err.message}`
         );
         return;
       }
+
+      // Batasi output supaya muat di Discord embed
+      const output =
+        stdout.length > 4090 ? stdout.slice(0, 4090) + "..." : stdout;
+
       const embed = new EmbedBuilder()
         .setColor(0x1abc9c)
         .setTitle("Info Sistem (fastfetch)")
-        .setDescription("```" + stdout + "```")
+        .setDescription(`\`\`\`\n${output}\n\`\`\``)
         .setFooter({ text: "Server Running" })
         .setTimestamp();
+
       message.reply({ embeds: [embed] });
     });
   },
 };
-
-// exec("fastfetch", (err, stdout, stderr) => {
-//   if (err) {
-//     console.error("Gagal ngejalanin fastfetch:", err);
-//     return;
-//   }
-//   console.log("Output fastfetch:\n", stdout);
-// });
