@@ -11,7 +11,7 @@ module.exports = {
   name: "gemini",
   description: "Ask questions to Google's Gemini AI",
   category: "AI",
-  usage: "!gemini <your question>",
+  usage: "!cia <your question>",
 
   async execute(message, args) {
     try {
