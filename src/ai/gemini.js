@@ -1,76 +1,159 @@
+/**
+ * Enhanced Gemini AI service with improved error handling and rate limiting
+ */
 const { GoogleGenAI } = require("@google/genai");
-const { createClient } = require("@supabase/supabase-js");
+const config = require("../config");
+const logger = require("../utils/logger");
+const Validator = require("../utils/validator");
+const database = require("../services/database");
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
-async function saveMessage(userId, channelId, message) {
-  const { data, error } = await supabase.from("conversations").insert([
-    {
-      user_id: userId,
-      channel_id: channelId,
-      message: message,
-    },
-  ]);
-
-  if (error) {
-    console.error("Error saving message:", error.message || error);
-  }
-  return data;
-}
-
-async function getMessage(userId, channelId, limit = 10) {
-  const { data, error } = await supabase
-    .from("conversations")
-    .select("message")
-    .eq("user_id", userId)
-    .eq("channel_id", channelId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error("Supabase Error:", error.message || error);
-    return [];
+class GeminiService {
+  constructor() {
+    this.ai = new GoogleGenAI({
+      apiKey: config.apis.gemini.key,
+    });
+    this.model = config.apis.gemini.model;
+    this.maxRetries = config.apis.gemini.maxRetries;
   }
 
-  return data ? data.map((row) => row.message).reverse() : [];
-}
+  async askGemini(userId, channelId, prompt) {
+    // Validate input
+    if (!Validator.isValidPrompt(prompt)) {
+      throw new Error("Invalid prompt provided");
+    }
 
-async function askGemini(userId, channelId, prompt) {
-  await saveMessage(userId, channelId, prompt);
+    if (!Validator.isValidDiscordId(userId)) {
+      throw new Error("Invalid user ID provided");
+    }
 
-  const messages = await getMessage(userId, channelId, 10);
-  const contents = messages
-    .map((msg) => ({ type: "text", text: msg }))
-    .concat([{ type: "text", text: prompt }]);
-
-  let retries = 3;
-  while (retries > 0) {
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents,
+      // Save user message to database
+      await database.saveMessage(userId, channelId, prompt, "user");
+
+      // Get conversation history
+      const conversationHistory = await database.getConversationHistory(
+        userId,
+        channelId,
+        10
+      );
+
+      // Prepare contents for Gemini
+      const contents = this.prepareContents(conversationHistory, prompt);
+
+      // Generate response with retry logic
+      const response = await this.generateWithRetry(contents);
+
+      // Save AI response to database
+      await database.saveMessage(userId, channelId, response, "assistant");
+
+      logger.info("Gemini response generated successfully", {
+        userId,
+        channelId,
+        promptLength: prompt.length,
+        responseLength: response.length,
       });
 
-      const answer = response.text;
+      return Validator.truncateMessage(response);
+    } catch (error) {
+      logger.error("Gemini service error", {
+        error: error.message,
+        userId,
+        channelId,
+        promptLength: prompt.length,
+      });
 
-      await saveMessage(userId, channelId, answer);
-      await saveMessage("gemini", channelId, answer);
+      if (
+        error.message.includes("503") ||
+        error.message.includes("Service Unavailable")
+      ) {
+        return "Gemini service is temporarily unavailable. Please try again later.";
+      }
 
-      return answer;
-    } catch (err) {
-      console.error("Gemini API Error:", err.message || err);
-      retries--;
-      if (retries === 0)
-        return "Gemini lagi ngambek (503). Coba lagi nanti ye!";
+      if (error.message.includes("quota")) {
+        return "API quota exceeded. Please try again later.";
+      }
+
+      return "I encountered an error while processing your request. Please try again.";
+    }
+  }
+
+  prepareContents(conversationHistory, currentPrompt) {
+    const contents = [];
+
+    // Add system message
+    contents.push({
+      type: "text",
+      text: "You are a helpful Discord bot named Pak Cia assistant. Provide concise, helpful responses.",
+    });
+
+    // Add conversation history
+    conversationHistory.forEach((msg) => {
+      if (msg.message && msg.message.trim()) {
+        contents.push({
+          type: "text",
+          text: `${msg.role}: ${msg.message}`,
+        });
+      }
+    });
+
+    // Add current prompt
+    contents.push({
+      type: "text",
+      text: `user: ${currentPrompt}`,
+    });
+
+    return contents;
+  }
+
+  async generateWithRetry(contents) {
+    let lastError;
+
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        logger.debug(`Gemini API attempt ${attempt}/${this.maxRetries}`);
+
+        const response = await this.ai.models.generateContent({
+          model: this.model,
+          contents,
+        });
+
+        if (!response || !response.text) {
+          throw new Error("Empty response from Gemini API");
+        }
+
+        return response.text.trim();
+      } catch (error) {
+        lastError = error;
+        logger.warn(`Gemini API attempt ${attempt} failed`, {
+          error: error.message,
+          attempt,
+          maxRetries: this.maxRetries,
+        });
+
+        // Wait before retry (exponential backoff)
+        if (attempt < this.maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
+  async healthCheck() {
+    try {
+      const response = await this.ai.models.generateContent({
+        model: this.model,
+        contents: [{ type: "text", text: "Hello" }],
+      });
+
+      return !!response.text;
+    } catch (error) {
+      logger.error("Gemini health check failed", { error: error.message });
+      return false;
     }
   }
 }
 
-module.exports = { askGemini, getMessage };
+module.exports = new GeminiService();

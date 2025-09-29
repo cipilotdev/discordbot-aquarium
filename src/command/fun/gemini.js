@@ -1,35 +1,88 @@
-const { askGemini } = require("../../ai/gemini");
+/**
+ * Gemini AI command with enhanced error handling and rate limiting
+ */
+const geminiService = require("../../ai/gemini");
+const rateLimiter = require("../../utils/rateLimiter");
+const config = require("../../config");
+const logger = require("../../utils/logger");
+const Validator = require("../../utils/validator");
 
 module.exports = {
   name: "gemini",
-  description: "Nanya mulu lu cari sendiri kocak! (bisa)",
+  description: "Ask questions to Google's Gemini AI",
+  category: "AI",
+  usage: "!gemini <your question>",
+
   async execute(message, args) {
-    const question = args.join(" ");
-    if (!question) {
-      return message.reply(
-        "Ngetik yang bener dong, kocak! (Contoh: !gemini siapakah sosok aseli kristofer ?)"
-      );
-    }
-
-    if (question.length > 1000) {
-      return message.reply(
-        "Pertanyaan lu kepanjangan bjir, maksimal 1000 karakter."
-      );
-    }
-
-    const thinkingMsg = await message.reply("Lagi mikir sabar dikit... 🤔");
-
     try {
-      // pass userId dan channelId ke askGemini
-      const reply = await askGemini(
-        message.author.id,
-        message.channel.id,
-        question
+      // Check rate limiting
+      if (
+        rateLimiter.isRateLimited(message.author.id, "ai", config.rateLimits.ai)
+      ) {
+        const timeLeft = Math.ceil(
+          rateLimiter.getTimeUntilReset(
+            message.author.id,
+            "ai",
+            config.rateLimits.ai
+          ) / 1000
+        );
+        return message.reply(
+          `Rate limit exceeded. Please wait ${timeLeft} seconds before using AI commands again.`
+        );
+      }
+
+      const question = args.join(" ");
+
+      // Validate input
+      if (!question) {
+        return message.reply(
+          "Please provide a question. Example: `!gemini What is artificial intelligence?`"
+        );
+      }
+
+      if (!Validator.isValidPrompt(question)) {
+        return message.reply(
+          `Please provide a valid question (max ${config.apis.gemini.maxPromptLength} characters).`
+        );
+      }
+
+      // Send thinking message
+      const thinkingMsg = await message.reply(
+        "Thinking... Please wait a moment."
       );
-      await thinkingMsg.edit(reply);
+
+      try {
+        // Get response from Gemini
+        const reply = await geminiService.askGemini(
+          message.author.id,
+          message.channel.id,
+          Validator.sanitizeInput(question)
+        );
+
+        await thinkingMsg.edit(reply);
+
+        logger.command("gemini", message.author.id, message.guild?.id, true);
+      } catch (error) {
+        logger.error("Gemini command execution error", {
+          error: error.message,
+          userId: message.author.id,
+          channelId: message.channel.id,
+        });
+
+        await thinkingMsg.edit(
+          "I encountered an error while processing your request. Please try again later."
+        );
+        logger.command("gemini", message.author.id, message.guild?.id, false);
+      }
     } catch (error) {
-      console.error("Discord command error:", error);
-      await thinkingMsg.edit("Waduh error nih, coba lagi nanti ya!");
+      logger.error("Gemini command error", {
+        error: error.message,
+        userId: message.author.id,
+        channelId: message.channel.id,
+      });
+
+      message.reply("An unexpected error occurred. Please try again later.");
+      logger.command("gemini", message.author.id, message.guild?.id, false);
     }
   },
 };
