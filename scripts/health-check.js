@@ -3,7 +3,7 @@
  */
 const config = require("../src/config");
 const database = require("../src/services/database");
-const geminiService = require("../src/ai/gemini");
+const geminiService = require("../src/ai/cia");
 const gptService = require("../src/ai/gpt");
 const hfService = require("../src/ai/hf");
 
