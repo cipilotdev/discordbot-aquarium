@@ -1,5 +1,13 @@
 /**
- * Health check script for the Discord bot
+ * const ciaService = require("../src/ai/cia");
+
+async function performHealthChecks() {
+  console.log("🔍 Performing health checks...\n");
+
+  const results = {
+    config: false,
+    database: false,
+    cia: false,eck script for the Discord bot
  */
 const config = require("../src/config");
 const database = require("../src/services/database");
@@ -40,14 +48,14 @@ async function performHealthChecks() {
     console.log("❌ Database: Error connecting");
   }
 
-  // Check Gemini API
+  // Check CIA API
   try {
-    results.gemini = await geminiService.healthCheck();
+    results.cia = await ciaService.healthCheck();
     console.log(
-      results.gemini ? "✅ Gemini API: OK" : "❌ Gemini API: Connection failed"
+      results.cia ? "✅ CIA API: OK" : "❌ CIA API: Connection failed"
     );
   } catch (error) {
-    console.log("❌ Gemini API: Error connecting");
+    console.log("❌ CIA API: Error connecting");
   }
 
   // Check GPT API

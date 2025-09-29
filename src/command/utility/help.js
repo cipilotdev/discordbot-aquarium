@@ -91,7 +91,7 @@ module.exports = {
       .setTitle("Discord Bot Commands")
       .setDescription(
         `Use prefix \`${config.discord.prefix}\` before commands.\n\n` +
-          `Example: \`${config.discord.prefix}gemini What is AI?\`\n` +
+          `Example: \`${config.discord.prefix}cia What is AI?\`\n` +
           `For detailed help on a command: \`${config.discord.prefix}help <command>\``
       )
       .setThumbnail(message.client.user.displayAvatarURL())

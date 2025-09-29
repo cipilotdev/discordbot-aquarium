@@ -6,7 +6,7 @@ A powerful, modular Discord bot with AI integration, interactive games, and util
 
 ### 🤖 AI Integration
 
-- **Gemini AI**: Google's advanced AI with conversation memory
+- **CIA AI**: Advanced AI system with conversation memory
 - **OpenAI GPT**: ChatGPT integration for intelligent responses
 - **Hugging Face**: Open-source AI models (Llama-3)
 
@@ -85,7 +85,7 @@ Create a `.env` file in the root directory:
 DISCORD_BOT_TOKEN=your_discord_bot_token
 
 # AI API Keys (Optional but recommended)
-GEMINI_API_KEY=your_gemini_api_key
+CIA_API_KEY=your_cia_api_key
 OPENAI_API_KEY=your_openai_api_key
 HF_API_KEY=your_hugging_face_api_key
 
@@ -101,7 +101,7 @@ MEME_API_URL=https://meme-api.com/gimme
 
 ### AI Commands
 
-- `!gemini <question>` - Ask Google's Gemini AI
+- `!cia <question>` - Ask CIA's advanced AI system
 - `!gpt <question>` - Ask OpenAI's GPT
 - `!hf <question>` - Ask Hugging Face models
 
@@ -124,12 +124,12 @@ MEME_API_URL=https://meme-api.com/gimme
 ```
 src/
 ├── ai/                 # AI service integrations
-│   ├── gemini.js      # Google Gemini service
+│   ├── cia.js         # CIA AI service
 │   ├── gpt.js         # OpenAI GPT service
 │   └── hf.js          # Hugging Face service
 ├── command/           # Discord commands
 │   ├── fun/           # Entertainment commands
-│   │   ├── gemini.js  # Gemini command
+│   │   ├── cia.js     # CIA command
 │   │   ├── gpt.js     # GPT command
 │   │   ├── hf.js      # HF command
 │   │   ├── meme.js    # Meme command
@@ -245,7 +245,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Discord.js](https://discord.js.org/) - Discord API library
-- [Google Gemini](https://ai.google.dev/) - Advanced AI capabilities
+- CIA AI System - Advanced AI capabilities
 - [OpenAI](https://openai.com/) - GPT models
 - [Hugging Face](https://huggingface.co/) - Open-source AI models
 - [Supabase](https://supabase.com/) - Database and backend services

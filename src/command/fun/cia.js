@@ -1,5 +1,5 @@
 /**
- * Gemini AI command with enhanced error handling and rate limiting
+ * CIA AI command with enhanced error handling and rate limiting
  */
 const geminiService = require("../../ai/cia");
 const rateLimiter = require("../../utils/rateLimiter");
@@ -8,8 +8,8 @@ const logger = require("../../utils/logger");
 const Validator = require("../../utils/validator");
 
 module.exports = {
-  name: "gemini",
-  description: "Ask questions to Google's Gemini AI",
+  name: "cia",
+  description: "Ask questions to CIA's advanced AI system",
   category: "AI",
   usage: "!cia <your question>",
 
@@ -36,7 +36,7 @@ module.exports = {
       // Validate input
       if (!question) {
         return message.reply(
-          "Please provide a question. Example: `!gemini What is artificial intelligence?`"
+          "Please provide a question. Example: `!cia What is artificial intelligence?`"
         );
       }
 
@@ -48,11 +48,11 @@ module.exports = {
 
       // Send thinking message
       const thinkingMsg = await message.reply(
-        "Thinking... Please wait a moment."
+        "Analyzing... Please wait while I process your query."
       );
 
       try {
-        // Get response from Gemini
+        // Get response from CIA AI
         const reply = await geminiService.askGemini(
           message.author.id,
           message.channel.id,
@@ -61,9 +61,9 @@ module.exports = {
 
         await thinkingMsg.edit(reply);
 
-        logger.command("gemini", message.author.id, message.guild?.id, true);
+        logger.command("cia", message.author.id, message.guild?.id, true);
       } catch (error) {
-        logger.error("Gemini command execution error", {
+        logger.error("CIA command execution error", {
           error: error.message,
           userId: message.author.id,
           channelId: message.channel.id,
@@ -72,17 +72,17 @@ module.exports = {
         await thinkingMsg.edit(
           "I encountered an error while processing your request. Please try again later."
         );
-        logger.command("gemini", message.author.id, message.guild?.id, false);
+        logger.command("cia", message.author.id, message.guild?.id, false);
       }
     } catch (error) {
-      logger.error("Gemini command error", {
+      logger.error("CIA command error", {
         error: error.message,
         userId: message.author.id,
         channelId: message.channel.id,
       });
 
       message.reply("An unexpected error occurred. Please try again later.");
-      logger.command("gemini", message.author.id, message.guild?.id, false);
+      logger.command("cia", message.author.id, message.guild?.id, false);
     }
   },
 };

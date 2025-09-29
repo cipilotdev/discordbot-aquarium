@@ -1,5 +1,5 @@
 /**
- * Enhanced Gemini AI service with improved error handling and rate limiting
+ * Enhanced CIA AI service with improved error handling and rate limiting
  */
 const { GoogleGenAI } = require("@google/genai");
 const config = require("../config");
@@ -7,7 +7,7 @@ const logger = require("../utils/logger");
 const Validator = require("../utils/validator");
 const database = require("../services/database");
 
-class GeminiService {
+class CIAService {
   constructor() {
     this.ai = new GoogleGenAI({
       apiKey: config.apis.gemini.key,
@@ -37,7 +37,7 @@ class GeminiService {
         10
       );
 
-      // Prepare contents for Gemini
+      // Prepare contents for CIA AI
       const contents = this.prepareContents(conversationHistory, prompt);
 
       // Generate response with retry logic
@@ -46,7 +46,7 @@ class GeminiService {
       // Save AI response to database
       await database.saveMessage(userId, channelId, response, "assistant");
 
-      logger.info("Gemini response generated successfully", {
+      logger.info("CIA response generated successfully", {
         userId,
         channelId,
         promptLength: prompt.length,
@@ -55,7 +55,7 @@ class GeminiService {
 
       return Validator.truncateMessage(response);
     } catch (error) {
-      logger.error("Gemini service error", {
+      logger.error("CIA service error", {
         error: error.message,
         userId,
         channelId,
@@ -66,7 +66,7 @@ class GeminiService {
         error.message.includes("503") ||
         error.message.includes("Service Unavailable")
       ) {
-        return "Gemini service is temporarily unavailable. Please try again later.";
+        return "CIA service is temporarily unavailable. Please try again later.";
       }
 
       if (error.message.includes("quota")) {
@@ -110,7 +110,7 @@ class GeminiService {
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        logger.debug(`Gemini API attempt ${attempt}/${this.maxRetries}`);
+        logger.debug(`CIA API attempt ${attempt}/${this.maxRetries}`);
 
         const response = await this.ai.models.generateContent({
           model: this.model,
@@ -118,13 +118,13 @@ class GeminiService {
         });
 
         if (!response || !response.text) {
-          throw new Error("Empty response from Gemini API");
+          throw new Error("Empty response from CIA API");
         }
 
         return response.text.trim();
       } catch (error) {
         lastError = error;
-        logger.warn(`Gemini API attempt ${attempt} failed`, {
+        logger.warn(`CIA API attempt ${attempt} failed`, {
           error: error.message,
           attempt,
           maxRetries: this.maxRetries,
@@ -150,10 +150,10 @@ class GeminiService {
 
       return !!response.text;
     } catch (error) {
-      logger.error("Gemini health check failed", { error: error.message });
+      logger.error("CIA health check failed", { error: error.message });
       return false;
     }
   }
 }
 
-module.exports = new GeminiService();
+module.exports = new CIAService();
