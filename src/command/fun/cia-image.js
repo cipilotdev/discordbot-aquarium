@@ -13,7 +13,7 @@ module.exports = {
   description: "Generate images using CIA's advanced AI system",
   category: "AI",
   usage: "!cia-image <your image description>",
-  aliases: ["ciai", "img"],
+  aliases: ["prompt", "img"],
 
   async execute(message, args) {
     try {
