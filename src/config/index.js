@@ -20,6 +20,11 @@ const config = {
       maxPromptLength: 1000,
       maxRetries: 3,
     },
+    gemini_images: {
+      key: process.env.GEMINI_API_KEY,
+      model: "gemini-2.5-flash-image-preview",
+      maxRetries: 3,
+    },
     openai: {
       key: process.env.OPENAI_API_KEY,
       model: "gpt-3.5-turbo",

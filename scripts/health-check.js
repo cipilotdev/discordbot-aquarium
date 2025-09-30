@@ -1,13 +1,5 @@
 /**
- * const ciaService = require("../src/ai/cia");
-
-async function performHealthChecks() {
-  console.log("🔍 Performing health checks...\n");
-
-  const results = {
-    config: false,
-    database: false,
-    cia: false,eck script for the Discord bot
+ * Health check script for the Discord bot
  */
 const config = require("../src/config");
 const database = require("../src/services/database");
@@ -50,9 +42,9 @@ async function performHealthChecks() {
 
   // Check CIA API
   try {
-    results.cia = await ciaService.healthCheck();
+    results.gemini = await geminiService.healthCheck();
     console.log(
-      results.cia ? "✅ CIA API: OK" : "❌ CIA API: Connection failed"
+      results.gemini ? "✅ CIA API: OK" : "❌ CIA API: Connection failed"
     );
   } catch (error) {
     console.log("❌ CIA API: Error connecting");
