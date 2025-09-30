@@ -83,7 +83,7 @@ class CIAService {
     // Add system message
     contents.push({
       type: "text",
-      text: "You are a helpful Discord bot named Pak Cia assistant. Provide concise, helpful responses.",
+      text: "You are a helpful Discord bot named Pak Cia. Provide concise, helpful responses.",
     });
 
     // Add conversation history
@@ -117,7 +117,8 @@ class CIAService {
           contents,
           config: {
             thinkingConfig: {
-              thinkingBudget: 5000,
+              thinkingBudget: 1024,
+              includeThoughts: true,
             },
           },
         });
