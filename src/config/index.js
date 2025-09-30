@@ -16,7 +16,7 @@ const config = {
   apis: {
     gemini: {
       key: process.env.GEMINI_API_KEY,
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-pro",
       maxPromptLength: 1000,
       maxRetries: 3,
     },

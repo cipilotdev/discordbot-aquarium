@@ -115,6 +115,11 @@ class CIAService {
         const response = await this.ai.models.generateContent({
           model: this.model,
           contents,
+          config: {
+            thinkingConfig: {
+              thinkingBudget: 5000,
+            },
+          },
         });
 
         if (!response || !response.text) {
